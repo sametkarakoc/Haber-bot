@@ -73,3 +73,18 @@ if __name__ == "__main__":
         haberleri_kontrol_et()
         print("✅ Haberler kontrol edildi. 5 dakika sonra tekrar kontrol edilecek...")
         time.sleep(300)  # ⏳ **Süreyi 5 Dakikaya Düşürdüm** (300 saniye)
+from flask import Flask  
+import threading  
+
+app = Flask(__name__)  
+
+@app.route('/')  
+def home():  
+    return "Bot çalışıyor!"  
+
+def run_flask():  
+    app.run(host="0.0.0.0", port=8080)  
+
+# Flask'i ayrı bir threadde başlat  
+t = threading.Thread(target=run_flask)  
+t.start()  
