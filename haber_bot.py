@@ -1,6 +1,8 @@
 import requests
 import feedparser
 import time
+from fuzzywuzzy import fuzz  # Benzerlik skoru hesaplamak için
+from fuzzywuzzy import process  
 
 # Telegram API bilgileri
 TELEGRAM_BOT_TOKEN = "7567881808:AAF46-Wwa99scQ3P_T-8RDxROqFsIvxF5Og"
@@ -30,7 +32,7 @@ RSS_FEEDS = [
 ]
 
 # Daha önce gönderilen haberleri saklamak için
-gonderilen_haberler = set()
+gonderilen_haberler = []
 
 def telegrama_mesaj_gonder(mesaj):
     """Telegram grubuna mesaj gönderir."""
@@ -52,13 +54,22 @@ def haberleri_kontrol_et():
             haber_link = entry.link
             haber_id = f"{haber_baslik}-{haber_link}"  # Haberi eşsiz yapan kimlik
 
+            # 🔍 **Benzerlik Kontrolü** 🔍
+            esik_deger = 85  # %85'ten fazla benzerse paylaşma  
+            benzerlik_skorlari = [fuzz.ratio(haber_baslik, onceki_haber.split("-")[0]) for onceki_haber in gonderilen_haberler]
+            
+            if benzerlik_skorlari and max(benzerlik_skorlari) >= esik_deger:
+                print(f"⚠️ {haber_baslik} benzer bulundu, atlanıyor...")
+                continue  # Haber benzer olduğu için geç
+
             if haber_id not in gonderilen_haberler:
                 mesaj = f"📰 <b>{haber_baslik}</b>\n\n🔗 {haber_link}"
                 telegrama_mesaj_gonder(mesaj)
-                gonderilen_haberler.add(haber_id)  # Haberi gönderilenler listesine ekle
+                gonderilen_haberler.append(haber_id)  # Haberi gönderilenler listesine ekle
+                print(f"✅ Yeni haber gönderildi: {haber_baslik}")
 
 if __name__ == "__main__":
     while True:
         haberleri_kontrol_et()
-        print("✅ Haberler kontrol edildi. 10 dakika sonra tekrar kontrol edilecek...")
-        time.sleep(600)  # 10 dakika bekle (600 saniye)
+        print("✅ Haberler kontrol edildi. 5 dakika sonra tekrar kontrol edilecek...")
+        time.sleep(300)  # ⏳ **Süreyi 5 Dakikaya Düşürdüm** (300 saniye)
